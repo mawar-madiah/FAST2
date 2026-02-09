@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Foundation in Science and Technology Academic Support (FAST 1.0)</title>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f5f7fa; padding:20px; }
+.container { max-width:1200px; margin:auto; background:#fff; padding:24px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.08); }
+h1,h2 { color:#1f2937; }
+label { font-weight:bold; display:block; margin-top:12px; }
+input,select,textarea { width:100%; padding:8px; margin-top:6px; border:1px solid #ccc; border-radius:6px; }
+textarea { resize:vertical; }
+.btn { margin-top:16px; padding:10px 16px; border:none; border-radius:8px; cursor:pointer; color:#fff; background:#2563eb; }
+.btn.delete { background:#ef4444; }
+.btn.export { background:#7c3aed; }
+.note { font-size:.9em; color:#555; }
+.form-section { margin-bottom:40px; }
+table { width:100%; border-collapse:collapse; margin-top:12px; }
+th,td { border:1px solid #ddd; padding:8px; text-align:left; }
+th { background:#f0f2f5; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1 style="text-align:center; line-height:1.3;">
+Foundation in Science and Technology<br>
+Academic Support (<strong>FAST 1.0</strong>)
+</h1>
+
+<p class="note">Select your role to access features.</p>
+
+<label>Role</label>
+<select id="roleSelect">
+  <option value="lecturer">Lecturer</option>
+  <option value="coordinator">Program Coordinator</option>
+</select>
+
+<!-- ================= PROGRAM COORDINATOR ================= -->
+<div id="coordinatorSection" class="form-section" style="display:none;">
+
+<h2>Upload Data (Program Coordinator)</h2>
+
+<p class="note">Students CSV: StudentID, Name, Program, AdmitTerm, CGPA, AdvisorName</p>
+<input type="file" id="studentUpload" accept=".csv">
+
+<p class="note">Lecturers CSV: LecturerName</p>
+<input type="file" id="lecturerUpload" accept=".csv">
+
+<p class="note">Courses CSV: CourseCode, CourseName</p>
+<input type="file" id="courseUpload" accept=".csv">
+
+<p class="note">Terms CSV: TermID</p>
+<input type="file" id="termUpload" accept=".csv">
+
+<button class="btn export" id="exportBtn">Export All Records</button>
+<button class="btn delete" id="deleteBtn">Delete All Data</button>
+
+<h2>Original Students List</h2>
+<table>
+<thead>
+<tr>
+<th>No.</th><th>Student ID</th><th>Name</th><th>Program</th>
+<th>Admit Term</th><th>CGPA</th><th>Advisor</th>
+</tr>
+</thead>
+<tbody id="studentTable"></tbody>
+</table>
+
+<h2>All Saved Academic Support Records</h2>
+<table>
+<thead>
+<tr>
+<th>Lecturer</th><th>Course</th><th>Term</th><th>Student</th>
+<th>Week</th><th>Risk Type</th><th>Risk Level</th><th>Comment</th>
+</tr>
+</thead>
+<tbody id="pcRecords"></tbody>
+</table>
+
+</div>
+
+<!-- ================= LECTURER ================= -->
+<div id="lecturerSection" class="form-section" style="display:none;">
+
+<h2>Academic Support Entry (Lecturer)</h2>
+
+<label>Lecturer</label>
+<select id="lecturerSelect"><option value="">-- Select Lecturer --</option></select>
+
+<label>Course</label>
+<select id="courseSelect"><option value="">-- Select Course --</option></select>
+
+<label>Term</label>
+<select id="termSelect"><option value="">-- Select Term --</option></select>
+
+<label>Student</label>
+<select id="studentSelect"><option value="">-- Select Student --</option></select>
+
+<label>Student Name</label><input id="s_name" readonly>
+<label>Student ID</label><input id="s_id" readonly>
+<label>Program</label><input id="s_prog" readonly>
+
+<label>Week</label>
+<select id="s_week">
+<option>Week 1</option><option>Week 2</option>
+<option>Week 3</option><option>Week 4</option>
+</select>
+
+<label>Risk Type</label>
+<select id="s_risk_type">
+<option value="">-- Select Risk Type --</option>
+<option>Poor lecture/tutorial/lab attendance</option>
+<option>CGPA below programme threshold (&lt; 2.00)</option>
+<option>Failure in one or more core subjects</option>
+<option>Poor mastery of foundational concepts (Maths, Chemistry, Physics, Programming)</option>
+<option>Extension of Foundation studies beyond intended intake</option>
+<option>Repeating subjects due to failure</option>
+<option>Late or missing coursework submissions</option>
+<option>Low engagement in classroom activities</option>
+<option>Passive or non-responsive behaviour during teaching sessions</option>
+<option>Weak self-regulated learning skills</option>
+<option>Inability to cope with independent study expectations</option>
+<option>Poor time management and study strategies</option>
+<option>Over-reliance on lecturers or peers</option>
+<option>Weak mathematical reasoning</option>
+<option>Limited computational or problem-solving skills</option>
+<option>Difficulty understanding academic language (English medium instruction)</option>
+</select>
+
+<label>Risk Level</label>
+<select id="s_risk_level">
+<option>Mild</option><option>Moderate</option><option>Severe</option>
+</select>
+
+<label>Comment</label>
+<textarea id="s_comment"></textarea>
+
+<button class="btn" id="saveBtn">Save Academic Support Record</button>
+
+<h2>My Saved Records</h2>
+<table>
+<thead>
+<tr>
+<th>Lecturer</th><th>Course</th><th>Term</th><th>Student</th>
+<th>Week</th><th>Risk Type</th><th>Risk Level</th><th>Comment</th>
+</tr>
+</thead>
+<tbody id="lecturerRecords"></tbody>
+</table>
+
+</div>
+
+</div>
+
+<script>
+// ================= DATA =================
+let students=[], lecturers=[], courses=[], terms=[], records=[];
+
+// ================= ELEMENTS =================
+const roleSelect=document.getElementById('roleSelect');
+const coordinatorSection=document.getElementById('coordinatorSection');
+const lecturerSection=document.getElementById('lecturerSection');
+
+// ================= ROLE SWITCH =================
+roleSelect.onchange=()=>{
+  coordinatorSection.style.display = roleSelect.value==='coordinator'?'block':'none';
+  lecturerSection.style.display = roleSelect.value==='lecturer'?'block':'none';
+};
+
+// ================= STORAGE =================
+function save(){ localStorage.setItem('FAST_DATA',JSON.stringify({students,lecturers,courses,terms,records})); }
+function load(){
+  const d=JSON.parse(localStorage.getItem('FAST_DATA')||'{}');
+  students=d.students||[]; lecturers=d.lecturers||[];
+  courses=d.courses||[]; terms=d.terms||[];
+  records=d.records||[];
+}
+
+// ================= CSV HELPERS =================
+function readCSV(file, cb){
+  const r=new FileReader();
+  r.onload=()=>cb(r.result.trim().split('\n').slice(1));
+  r.readAsText(file);
+}
+
+// ================= UPLOADS =================
+studentUpload.onchange=()=>readCSV(studentUpload.files[0],lines=>{
+  students=lines.map(l=>{
+    const [id,n,p,t,c,a]=l.split(',');
+    return {id:id?.trim(),name:n?.trim(),prog:p?.trim(),term:t?.trim(),cgpa:c?.trim(),advisor:a?.trim()};
+  }).filter(s=>s.id);
+  save(); renderStudents(); populate(); alert('Students uploaded');
+});
+
+lecturerUpload.onchange=()=>readCSV(lecturerUpload.files[0],l=>{
+  lecturers=l.map(x=>x.split(',')[0].trim()).filter(Boolean);
+  save(); populate(); alert('Lecturers uploaded');
+});
+
+courseUpload.onchange=()=>readCSV(courseUpload.files[0],l=>{
+  courses=l.map(x=>{const[c,n]=x.split(','); return {code:c?.trim(),name:n?.trim()};}).filter(c=>c.code);
+  save(); populate(); alert('Courses uploaded');
+});
+
+termUpload.onchange=()=>readCSV(termUpload.files[0],l=>{
+  terms=l.map(x=>x.trim()).filter(Boolean);
+  save(); populate(); alert('Terms uploaded');
+});
+
+// ================= RENDER =================
+function renderStudents(){
+  studentTable.innerHTML=students.map((s,i)=>
+    `<tr><td>${i+1}</td><td>${s.id}</td><td>${s.name}</td><td>${s.prog}</td>
+     <td>${s.term}</td><td>${s.cgpa}</td><td>${s.advisor}</td></tr>`).join('');
+}
+
+function populate(){
+  lecturerSelect.innerHTML='<option value="">-- Select Lecturer --</option>';
+  lecturers.forEach(l=>lecturerSelect.innerHTML+=`<option>${l}</option>`);
+
+  courseSelect.innerHTML='<option value="">-- Select Course --</option>';
+  courses.forEach(c=>courseSelect.innerHTML+=`<option value="${c.code}|${c.name}">${c.code} – ${c.name}</option>`);
+
+  termSelect.innerHTML='<option value="">-- Select Term --</option>';
+  terms.forEach(t=>termSelect.innerHTML+=`<option>${t}</option>`);
+
+  studentSelect.innerHTML='<option value="">-- Select Student --</option>';
+  students.forEach((s,i)=>studentSelect.innerHTML+=`<option value="${i}">${s.id} - ${s.name}</option>`);
+}
+
+studentSelect.onchange=()=>{
+  const s=students[studentSelect.value]; if(!s) return;
+  s_name.value=s.name; s_id.value=s.id; s_prog.value=s.prog;
+};
+
+// ================= SAVE RECORD =================
+saveBtn.onclick=()=>{
+  if(!lecturerSelect.value||!courseSelect.value||!termSelect.value||!s_id.value||!s_risk_type.value)
+    return alert('Please complete all fields');
+
+  const [courseCode,courseName]=courseSelect.value.split('|');
+
+  records.push({
+    lecturer:lecturerSelect.value,
+    courseCode,courseName,
+    term:termSelect.value,
+    student:s_name.value,
+    week:s_week.value,
+    riskType:s_risk_type.value,
+    riskLevel:s_risk_level.value,
+    comment:s_comment.value
+  });
+  save(); renderRecords(); alert('Record saved');
+};
+
+// ================= RECORD TABLES =================
+function renderRecords(){
+  const rows=records.map(r=>`
+  <tr>
+    <td>${r.lecturer}</td>
+    <td>${r.courseCode} – ${r.courseName}</td>
+    <td>${r.term}</td>
+    <td>${r.student}</td>
+    <td>${r.week}</td>
+    <td>${r.riskType}</td>
+    <td>${r.riskLevel}</td>
+    <td>${r.comment}</td>
+  </tr>`).join('');
+  pcRecords.innerHTML=rows;
+  lecturerRecords.innerHTML=rows;
+}
+
+// ================= EXPORT / DELETE =================
+exportBtn.onclick=()=>{
+  const csv=[['Lecturer','CourseCode','CourseName','Term','Student','Week','RiskType','RiskLevel','Comment']]
+  .concat(records.map(r=>Object.values(r)));
+  const blob=new Blob([csv.map(r=>r.map(x=>`"${x}"`).join(',')).join('\n')]);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='FAST_records.csv'; a.click();
+};
+
+deleteBtn.onclick=()=>{
+  if(confirm('Delete ALL data?')){ localStorage.clear(); location.reload(); }
+};
+
+// ================= INIT =================
+load(); renderStudents(); populate(); renderRecords();
+roleSelect.dispatchEvent(new Event('change'));
+</script>
+</body>
+</html>
